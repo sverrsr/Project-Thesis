@@ -20,7 +20,7 @@ if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
 
-for k = 1:Nt  % or however many surfaces you have
+for k = 1:200  % or however many surfaces you have
     % Update Z for this iteration
 
     Z = u(:,:,k);   % example: one surface per slice

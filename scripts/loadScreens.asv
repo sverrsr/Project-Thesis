@@ -1,19 +1,8 @@
 % Create output folder
-outDir = 'videos';
+outDir = 'screens_blurred';
 if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
-
-% AVI file:
-%vidName = 'blurred_animation.avi'
-%vidPath = fullfile(outDir, vidName); % Create video writer in new folder
-%v = VideoWriter(vidPath); 
-
-% MP4 file:
-vidName = 'blurred_animation.mp4'
-vidPath = fullfile(outDir, vidName); % Create video writer in new folder
-v = VideoWriter(vidPath, 'MPEG-4');
-
 
 
 
@@ -22,13 +11,18 @@ files = dir(fullfile(folder, 'screen_*.mat'));
 files = {files.name};
 files = sort(files);
 
+% Create video writer in new folder
+vidPath = fullfile(outDir, vidName);
+
+%vidName = 'blurred_animation.avi'
+
+
+
+%v = VideoWriter(vidPath); % For AVI
+v = VideoWriter(vidPath, 'MPEG-4'); %For Mp4
+
 v.FrameRate = 20; %fps
 open(v);
-
-% Set fixed limits before the loop
-caxis([0 1.0]);  % adjust range to fit your data
-colormap(flipud(sky));
-colorbar;
 
 figure;
 for k = 1:numel(files)
@@ -47,7 +41,8 @@ for k = 1:numel(files)
 
     imagesc(img);
     axis image;
-
+    colormap(flipud(sky));
+    colorbar;
     set(gca, 'YDir', 'normal');
     title(sprintf('Frame %d / %d', k, numel(files)));
 
