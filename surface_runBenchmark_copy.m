@@ -1,18 +1,78 @@
-function varargout = examplesurface_lensRun()
 %%
 clear all; close all; clc;
-%%
 
 load surfaceData1200.mat 
 load surfMesh.mat
-%% Plots only the surface at s = 1200
-X = xMesh; Y = yMesh; %Z = surfaceData1200;
 
+
+X = xMesh; Y = yMesh; %Z = surfaceData1200;
 % Gaussian blob
 A = 50;     % height of the blob
 a = 100;     % width
 Z = A * exp(- (X.^2 + Y.^2) / a^2);
 clear xMesh yMesh surfaceData1200
+
+outDir = 'screens';
+if ~exist(outDir, 'dir')
+    mkdir(outDir);
+end
+
+for k = 1:1  % or however many surfaces you have
+    % Update Z for this iteration
+
+    %Z = surfaceData(:,:,k);   % example: one surface per slice
+
+    % --- your setup and tracing code here ---
+    [screen, rays_out, bench, surf] = examplesurface_lensRun(X, Y, Z);
+
+    % Save the screen image
+    fig = figure('Visible','off');
+    imagesc(screen.image); axis image; colormap hot; colorbar;
+    set(gca,'YDir','normal');
+    title(sprintf('Frame %d', k));
+    
+    filename = fullfile(outDir, sprintf('screen_%04d.mat', k));
+    screen_image = screen.image; %#ok<NASGU>
+    save(filename, 'screen_image');
+
+    close(fig);
+
+    fprintf('Saved %s\n', filename);
+end
+
+
+
+% Print screen geometry
+fprintf('Surface radius R: %.3f\n', surf.R);
+fprintf('Surface normal n: [%.4f %.4f %.4f]\n', surf.n);
+fprintf('Surface position r: [%.4f %.4f %.4f]\n', surf.r);
+% Print screen geometry
+fprintf('Screen radius R: %.3f\n', screen.R);
+fprintf('Screen normal n: [%.4f %.4f %.4f]\n', screen.n);
+fprintf('Screen position r: [%.4f %.4f %.4f]\n', screen.r);
+
+% Visualize
+bench.draw(rays_out, 'lines', 1, 1.5);
+axis equal;
+grid on;
+view(35, 20);
+xlabel('X (mm)'); ylabel('Y (mm)'); zlabel('Z (mm)');
+camlight('headlight'); camlight('left'); camlight('right');
+lighting gouraud;
+title('GeneralLens using surface_lens (interpolated surface)', 'Color','w');
+
+figure('Name','surface_lens screen capture','NumberTitle','Off');
+imagesc(screen.image); axis image; colormap hot; colorbar;
+set(gca,'YDir','normal');
+title('Illumination after surface_lens'); xlabel('Screen Y bins'); ylabel('Screen Z bins');
+
+
+
+
+
+function varargout = examplesurface_lensRun(X, Y, Z)
+
+
 
 %% Convert between meshgrid and ngrid formats
 % Gridded interpolant uses NGRID format, so it's necessary to convert 
@@ -134,32 +194,12 @@ xlabel('Y at source'); ylabel('Z at source'); title('Rays launch footprint');
 fprintf('Tracing rays through surface_lens ...\n');
 rays_out = bench.trace(rays_in);
 
-% Print screen geometry
-fprintf('Surface radius R: %.3f\n', surf.R);
-fprintf('Surface normal n: [%.4f %.4f %.4f]\n', surf.n);
-fprintf('Surface position r: [%.4f %.4f %.4f]\n', surf.r);
-% Print screen geometry
-fprintf('Screen radius R: %.3f\n', screen.R);
-fprintf('Screen normal n: [%.4f %.4f %.4f]\n', screen.n);
-fprintf('Screen position r: [%.4f %.4f %.4f]\n', screen.r);
+
 % Print screen geometry
 fprintf('Beam normal n: [%.4f %.4f %.4f]\n', incident_dir);
 fprintf('Beam position r: [%.4f %.4f %.4f]\n', source_pos);
 
-% Visualize
-bench.draw(rays_out, 'lines', 1, 1.5);
-axis equal;
-grid on;
-view(35, 20);
-xlabel('X (mm)'); ylabel('Y (mm)'); zlabel('Z (mm)');
-camlight('headlight'); camlight('left'); camlight('right');
-lighting gouraud;
-title('GeneralLens using surface_lens (interpolated surface)', 'Color','w');
 
-figure('Name','surface_lens screen capture','NumberTitle','Off');
-imagesc(screen.image); axis image; colormap hot; colorbar;
-set(gca,'YDir','normal');
-title('Illumination after surface_lens'); xlabel('Screen Y bins'); ylabel('Screen Z bins');
 
 if nargout >= 1, varargout{1} = screen; end
 if nargout >= 2, varargout{2} = rays_out; end
