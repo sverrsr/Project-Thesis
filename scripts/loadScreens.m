@@ -1,5 +1,5 @@
 % -----------------------------------------------------------------------------
-% Creates an MP4 animation from .mat image files.
+% Creates an MP4 or AVI animation from .mat image files.
 % Loads each frame, applies Gaussian blur, updates the plot, 
 % and writes frames to a video file with fixed color scale and colormap.
 %
@@ -17,6 +17,11 @@ outDir = 'videos';
 if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
+
+% AVI file:
+%vidName = 'blurred_animation.avi'
+%vidPath = fullfile(outDir, vidName);
+%v = VideoWriter(vidPath);
 
 % MP4 file:
 vidName = 'blurred_animation.mp4';
