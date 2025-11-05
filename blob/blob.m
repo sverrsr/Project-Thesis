@@ -1,15 +1,16 @@
 % sizes to match your screenshot: [Ny, Nx, Nt] = [501, 408, 1201]
 Ny = 501; Nx = 408; Nt = 200;
 
-Lx = 10; Ly = 12;                % spatial extents (units arbitrary)
-x = linspace(-Lx/2, Lx/2, Nx);
-y = linspace(-Ly/2, Ly/2, Ny);
-[X,Y] = meshgrid(x, y);
+load surfaceData1200.mat 
+load surfMesh.mat
+
+
+X = xMesh; Y = yMesh; %Z = surfaceData1200;
 
 dt = 0.01; t = (0:Nt-1)*dt;
 
 A = 15.0;                         % peak height
-a = 2.0;                         % width
+a = 100.0;                         % width
 omega = 2*pi*0.5;                % breathing frequency (Hz)
 
 surfData = zeros(Ny, Nx, Nt, 'double');

@@ -4,10 +4,11 @@ u = h5read('wave.h5', '/u');   % shape: [Ny, Nx, Nt]
 % Define spatial grid (same as before)
 Ny = 501; Nx = 408; Nt = 1201;
 
-Lx = 10; Ly = 12;
-x = linspace(-Lx/2, Lx/2, Nx);
-y = linspace(-Ly/2, Ly/2, Ny);
-[X, Y] = meshgrid(x, y);
+load surfaceData1200.mat 
+load surfMesh.mat
+
+
+X = xMesh; Y = yMesh; %Z = surfaceData1200;
 
 A = 50;
 
@@ -17,7 +18,7 @@ hSurf = surf(X, Y, u(:,:,1));
 shading interp
 colormap parula
 axis tight
-axis([min(x) max(x) min(y) max(y) -A A])
+axis([min(X(:)) max(X(:)) min(Y(:)) max(Y(:)) -A A])
 xlabel('x'); ylabel('y'); zlabel('Amplitude');
 
 % Animate
