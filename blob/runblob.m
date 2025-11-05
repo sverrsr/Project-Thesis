@@ -1,9 +1,6 @@
 % Load the data
 u = h5read('wave.h5', '/u');   % shape: [Ny, Nx, Nt]
 
-% Define spatial grid (same as before)
-Ny = 501; Nx = 408; Nt = 1201;
-
 load surfaceData1200.mat 
 load surfMesh.mat
 

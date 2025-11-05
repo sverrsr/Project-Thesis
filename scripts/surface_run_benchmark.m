@@ -38,6 +38,7 @@ dx = diff(xa);
 dy = diff(ya);
 dx_min = min(dx(:));
 dy_min = min(dy(:));
+
 if isempty(dx_min) || isempty(dy_min) || ~isfinite(dx_min) || ~isfinite(dy_min)
     error('surface_run:InvalidGrid', 'Surface grid must contain at least two unique samples per axis.');
 end
@@ -124,7 +125,7 @@ rect_wy = 2*ap_half_y;
 rect_wz = 2*ap_half_z;
 beam_side = 0.98 * max(rect_wy, rect_wz);  % slightly smaller than the larger side
 
-rays_in = Rays(nrays, 'collimated', source_pos, incident_dir, beam_side, 'random');
+rays_in = Rays(nrays, 'collimated', source_pos, incident_dir, beam_side, 'square');
 
 figure('Name','Launch footprint (source plane)');
 scatter(rays_in.r(:,2), rays_in.r(:,3), 6, 'filled'); axis equal; grid on;
