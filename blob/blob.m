@@ -25,7 +25,7 @@ for k = 1:Nt
     h5write('wave.h5','/u', surfData(:,:,k), [1 1 k], [Ny Nx 1]);
 end
 
-k = 1; surf(x,y, surfData(:,:,k)); axis tight; shading interp; colormap parula
+%k = 1; surf(x,y, surfData(:,:,k)); axis tight; shading interp; colormap parula
 
 %% Save
 for k = 1:size(surfData,3)
