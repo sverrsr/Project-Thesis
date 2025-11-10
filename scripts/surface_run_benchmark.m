@@ -111,7 +111,7 @@ screen.rotate([1 0 0], pi);   % face back toward the optic
 bench.append(screen);
 
 % Collimated beam aimed along +X
-nrays = 100;
+nrays = 1000;
 source_distance = 300;
 source_pos   = [source_distance 0 0];
 incident_dir = [-1 0 0];
@@ -125,7 +125,7 @@ rect_wy = 2*ap_half_y;
 rect_wz = 2*ap_half_z;
 beam_side = 0.98 * max(rect_wy, rect_wz);  % slightly smaller than the larger side
 
-rays_in = Rays(nrays, 'collimated', source_pos, incident_dir, beam_side, 'square');
+rays_in = Rays(nrays, 'collimated', source_pos, incident_dir, beam_side, 'random');
 
 figure('Name','Launch footprint (source plane)');
 scatter(rays_in.r(:,2), rays_in.r(:,3), 6, 'filled'); axis equal; grid on;
