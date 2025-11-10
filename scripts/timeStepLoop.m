@@ -20,8 +20,11 @@ if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
 
-for k = 1:200  % or however many surfaces you have
+Nt = 200;
+
+for k = 1:Nt  % or however many surfaces you have
     % Update Z for this iteration
+    fprintf('Tracing frame %d of %d ...\n', k, Nt);
 
     Z = u(:,:,k);   % example: one surface per slice
 
@@ -172,8 +175,8 @@ screen.rotate([1 0 0], pi);   % face back toward the optic
 bench.append(screen);
 
 % Collimated beam aimed along +X
-nrays = 100000;
-source_distance = 300;
+nrays = 10000;
+source_distance = 100;
 source_pos   = [source_distance 0 0];
 incident_dir = [-1 0 0];
 

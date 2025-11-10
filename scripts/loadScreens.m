@@ -24,7 +24,7 @@ end
 %v = VideoWriter(vidPath);
 
 % MP4 file:
-vidName = 'blurred_animation.mp4';
+vidName = 'screens_WaveSurface_10000_square.mp4';
 vidPath = fullfile(outDir, vidName);
 v = VideoWriter(vidPath, 'MPEG-4');
 
@@ -75,7 +75,7 @@ fprintf('Global intensity range: [%.3e, %.3e]\n', minVal, maxVal);
 
 % adjust range to match your data
 % Must be adjusted to Gauss filtering. More gauss, lower axis
-caxis([minVal, maxVal]);
+caxis([minVal, 0.05]);
 
 % --- Main animation loop ---
 for k = 1:numel(files)
@@ -90,7 +90,7 @@ for k = 1:numel(files)
         img = data.(fns{1});
     end
 
-    img = imgaussfilt(img, 1);
+    img = imgaussfilt(img, 4);
     set(hImg, 'CData', img);  % update only the image data
     title(sprintf('Frame %d / %d', k, numel(files)));
     drawnow;
