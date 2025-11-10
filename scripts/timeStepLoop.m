@@ -15,7 +15,7 @@ A = 50;     % height of the blob
 a = 100;     % width
 
 
-outDir = 'screens';
+outDir = 'screens_WaveSurface';
 if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
@@ -172,7 +172,7 @@ screen.rotate([1 0 0], pi);   % face back toward the optic
 bench.append(screen);
 
 % Collimated beam aimed along +X
-nrays = 100;
+nrays = 1000;
 source_distance = 300;
 source_pos   = [source_distance 0 0];
 incident_dir = [-1 0 0];

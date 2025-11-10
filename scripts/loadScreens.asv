@@ -1,3 +1,5 @@
+
+
 % -----------------------------------------------------------------------------
 % Creates an MP4 animation from .mat image files.
 % Loads each frame, applies Gaussian blur, updates the plot, 
