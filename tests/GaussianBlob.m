@@ -1,5 +1,5 @@
-    function varargout = examplesurface_lensRun()
-%%
+function varargout = GaussianBlob()
+%% 
 clear all; close all; clc;
 %%
 
@@ -106,7 +106,7 @@ bench.append(surf);
 % Screen downstream (along +X)
 screen_distance = 200;  % mm along +X
 screen_size = max(aperture * 1.25, 64);                    % mm
-screen = Screen([screen_distance 0 0], screen_size, screen_size, 512, 512);
+screen = Screen([screen_distance 0 1], screen_size, screen_size, 512, 512);
 screen.rotate([1 0 0], pi);   % face back toward the optic
 bench.append(screen);
 

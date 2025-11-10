@@ -75,8 +75,6 @@ title('Illumination after surface_lens'); xlabel('Screen Y bins'); ylabel('Scree
 
 function varargout = examplesurface_lensRun(X, Y, Z)
 
-
-
 %% Convert between meshgrid and ngrid formats
 % Gridded interpolant uses NGRID format, so it's necessary to convert 
 % https://se.mathworks.com/help/matlab/ref/ndgrid.html

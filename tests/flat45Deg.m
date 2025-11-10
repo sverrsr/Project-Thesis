@@ -1,4 +1,4 @@
-function varargout = examplesurface_lensRun()
+function varargout = flat45deg()
 %%
 clear all; close all; clc;
 %%

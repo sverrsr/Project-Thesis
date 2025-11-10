@@ -1,4 +1,4 @@
-function varargout = examplesurface_lensRun()
+function varargout = pyramid()
 %%
 clear all; close all; clc;
 %%
