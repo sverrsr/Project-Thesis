@@ -1,21 +1,34 @@
 function x = surface_lens( y, z, args, flag )
-% To trace through a general lens profile one needs to create a function,
-% which takes two arguments ( y, z ) defining a position in the lens
-% plane, an arbitrary number of additional arguments provided in the cell 
-% array args, and, finally, a flag argument. On flag == 0 the function 
-% should return the lens height x for the given position ( y, z ). Otherwise,
-% the function should return the lens normal at this position. By convention, 
-% the normal should point along the x-axis, i.e. in the same general 
-% direction as the traced ray.
+% surface_lens
 %
-% LENS SURFACE defines a surface profile.
-% the first two input arguments are coordinates in the lens plane, the
-% third argument is a cell array holding the lens height argv{1}, the
-% surface slopes argv{2:3}, and optionally the center of the data grid
-% argv{4} (used to align the interpolated surface with the optical axis).
-% argv{5} and argv{6} can provide the finite limits of the underlying grid
-% ( [xmin xmax], [ymin ymax] ), which are used to clip evaluations inside the
-% tabulated domain when tracing rays.
+% Computes either the surface height or the normal vector of a general lens
+% profile. If flag == 0 the function returns the lens height x for the given position ( y, z ).
+% Otherwise, the function returns the lens normal at this position. 
+%
+% Usage:
+%   x = surface_lens(y, z, args, flag)
+%
+% Inputs:
+%   y, z   - Coordinates in the lens plane.
+%   args   - Cell array with surface data and optional parameters:
+%              args{1} : Function handle for lens height Z(x, y)    
+%              args{2} : Function handle for dZ/dx
+%              args{3} : Function handle for dZ/dy
+%              args{4} : (optional) [x0, y0] grid center
+%              args{5} : (optional) [xmin, xmax] limits
+%              args{6} : (optional) [ymin, ymax] limits
+%   flag   - Mode selector:
+%              0 : return surface height (x = Z)
+%              1 : return surface normal [nx, ny, nz]
+%
+% Outputs:
+%   x - If flag == 0: scalar lens height.
+%       If flag ~= 0: unit normal vector at (y, z), oriented along +x.
+%
+% Notes:
+% - Keeps evaluations within the defined grid limits.
+% - Surface normals are normalized and flipped if not pointing toward +x.
+
 
 F   = args{1};   % height Z(x,y)
 Fdx = args{2};   % dZ/dx, called as Fdx(y,x)

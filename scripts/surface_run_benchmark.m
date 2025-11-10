@@ -6,12 +6,12 @@ clear all; close all; clc;
 load surfaceData1200.mat 
 load surfMesh.mat
 %% Plots only the surface at s = 1200
-X = xMesh; Y = yMesh; %Z = surfaceData1200;
+X = xMesh; Y = yMesh; Z = surfaceData1200;
 
 % Gaussian blob
-A = 50;     % height of the blob
-a = 100;     % width
-Z = A * exp(- (X.^2 + Y.^2) / a^2);
+% A = 50;     % height of the blob
+% a = 100;     % width
+% Z = A * exp(- (X.^2 + Y.^2) / a^2);
 clear xMesh yMesh surfaceData1200
 
 %% Convert between meshgrid and ngrid formats
