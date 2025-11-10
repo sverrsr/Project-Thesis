@@ -28,7 +28,7 @@ vidName = 'blurred_animation.mp4';
 vidPath = fullfile(outDir, vidName);
 v = VideoWriter(vidPath, 'MPEG-4');
 
-folder = 'screens';
+folder = 'screens_WaveSurface';
 files = dir(fullfile(folder, 'screen_*.mat'));
 files = {files.name};
 files = sort(files);
