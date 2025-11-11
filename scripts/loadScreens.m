@@ -11,9 +11,10 @@
 %   caxis([0 0.05]) – color range for all frames
 % -----------------------------------------------------------------------------
 
+GaussFiltVal = 0.5;
 
 % Create output folder
-outDir = 'videos';
+outDir = 'videos_DNS';
 if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
@@ -24,11 +25,11 @@ end
 %v = VideoWriter(vidPath);
 
 % MP4 file:
-vidName = 'screens_WaveSurface_10000_square.mp4';
+vidName = 'DNS_100k.mp4';
 vidPath = fullfile(outDir, vidName);
 v = VideoWriter(vidPath, 'MPEG-4');
 
-folder = 'screens_WaveSurface';
+folder = 'DNS_SCREENS';
 files = dir(fullfile(folder, 'screen_*.mat'));
 files = {files.name};
 files = sort(files);
@@ -46,14 +47,15 @@ else
     fns = fieldnames(data);
     img = data.(fns{1});
 end
-img = imgaussfilt(img, 4);
+
+img = imgaussfilt(img, GaussFiltVal);
 
 % --- Set up figure once ---
 figure;
 hImg = imagesc(img);
 axis image;
 set(gca, 'YDir', 'normal');
-colormap(flipud(sky));
+colormap("gray"); %flipud(sky)
 colorbar;
 
 % Compute global limits across all frames
@@ -75,8 +77,9 @@ fprintf('Global intensity range: [%.3e, %.3e]\n', minVal, maxVal);
 
 % adjust range to match your data
 % Must be adjusted to Gauss filtering. More gauss, lower axis
-caxis([minVal, 0.05]);
+caxis([1, 2]);
 
+%%
 % --- Main animation loop ---
 for k = 1:numel(files)
     data = load(fullfile(folder, files{k}));
@@ -90,7 +93,7 @@ for k = 1:numel(files)
         img = data.(fns{1});
     end
 
-    img = imgaussfilt(img, 4);
+    img = imgaussfilt(img, GaussFiltVal);
     set(hImg, 'CData', img);  % update only the image data
     title(sprintf('Frame %d / %d', k, numel(files)));
     drawnow;

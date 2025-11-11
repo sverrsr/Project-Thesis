@@ -1,0 +1,110 @@
+function varargout = DNS(X, Y, Z)
+
+[xa, ix] = sort(X(1,:));
+[ya, iy] = sort(Y(:,1));
+
+
+x_limits = [xa(1), xa(end)];
+y_limits = [ya(1), ya(end)];
+grid_center = [mean(x_limits), mean(y_limits)];
+half_span = 0.5 * [diff(x_limits), diff(y_limits)];
+
+
+dx = diff(xa);
+dy = diff(ya);
+dx_min = min(dx(:));
+dy_min = min(dy(:));
+
+if isempty(dx_min) || isempty(dy_min) || ~isfinite(dx_min) || ~isfinite(dy_min)
+    error('surface_run:InvalidGrid', 'Surface grid must contain at least two unique samples per axis.');
+end
+min_spacing = min([dx_min, dy_min]);
+edge_buffer = 0.5 * min_spacing;
+
+usable_radius = min(half_span) - edge_buffer;
+if usable_radius <= 0
+    error('surface_run:InvalidSurfaceBounds', ...
+        'Surface data has insufficient span once edge buffer is removed.');
+end
+ 
+Za = Z(iy, ix);
+
+F = griddedInterpolant({xa, ya}, Za.', 'linear', 'none');  % F(X,Y)
+clear Za
+
+Zi = F(X', Y')';  isequal(Zi, Z);
+
+[dZdx, dZdy] = gradient(Zi, xa, ya);          % X spacing first, then Y
+
+Fdx = griddedInterpolant({ya, xa}, dZdx, 'linear', 'none');   % or 'makima'/'spline'
+Fdy = griddedInterpolant({ya, xa}, dZdy, 'linear', 'none');
+
+lens_args = {F, Fdx, Fdy, grid_center, x_limits, y_limits};
+
+%% --- Build the bench (same layout as your example) ---
+bench = Bench;
+
+aperture = 2 * usable_radius;  % mm, matches the usable surface data
+% Use 'air' to 'mirror' for a reflective test (no dispersion setup needed).
+% For a transmissive lens, swap 'mirror' -> a glass name present in your material set (e.g., 'bk7').
+
+usable_half_span = half_span - edge_buffer;
+ap_half_y = usable_half_span(1);
+ap_half_z = usable_half_span(2);
+
+rect_aperture = [0; 0; 2*ap_half_y; 2*ap_half_z];   % FULL widths (required)
+
+surf = GeneralLens([0 0 0], rect_aperture, 'surface_lens', {'mirror','air'}, lens_args{:});
+%surf.rotate([0 0 1], pi/4);   % face back toward the optic
+
+bench.append(surf);
+
+% Screen downstream (along +X)
+screen_distance = pi;  % mm along +X
+screen_size = max(aperture * 0.3, 8);                    % mm
+screen = Screen([screen_distance 0 0], screen_size, screen_size, 512, 512);
+screen.rotate([1 0 0], pi);   % face back toward the optic
+bench.append(screen);
+
+% Collimated beam aimed along +X
+nrays = 1000;
+source_distance = pi;
+source_pos   = [source_distance 0 0];
+incident_dir = [-1 0 0];
+
+
+% beam: square side >= the larger rectangle side
+ap_half_y = usable_half_span(1);
+ap_half_z = usable_half_span(2);
+
+rect_wy = 2*ap_half_y;
+rect_wz = 2*ap_half_z;
+beam_side = 0.98 * max(rect_wy, rect_wz);  % slightly smaller than the larger side
+
+rays_in = Rays(nrays, 'collimated', source_pos, incident_dir, beam_side, 'random');
+
+fprintf('Tracing rays through surface_lens ...\n');
+rays_out = bench.trace(rays_in);
+
+% Print screen geometry
+fprintf('\n=== Surface ===\n');
+fprintf('  Radius (R):        %.2f\n', surf.R);
+fprintf('  Normal (n):        [%.2f  %.2f  %.2f]\n', surf.n);
+fprintf('  Position (r):      [%.2f  %.2f  %.2f]\n', surf.r);
+
+fprintf('\n=== Screen ===\n');
+fprintf('  Radius (R):        %.2f\n', screen.R);
+fprintf('  Normal (n):        [%.2f  %.2f  %.2f]\n', screen.n);
+fprintf('  Position (r):      [%.2f  %.2f  %.2f]\n', screen.r);
+fprintf('  Size (mm):         %.2f × %.2f\n', screen_size, screen_size);
+
+fprintf('\n=== Beam ===\n');
+fprintf('  Direction (n):     [%.2f  %.2f  %.2f]\n', incident_dir);
+fprintf('  Position (r):      [%.2f  %.2f  %.2f]\n', source_pos);
+fprintf('====================\n\n');
+
+if nargout >= 1, varargout{1} = screen; end
+if nargout >= 2, varargout{2} = rays_out; end
+if nargout >= 3, varargout{3} = bench; end
+if nargout >= 4, varargout{4} = surf; end
+end
