@@ -15,7 +15,13 @@ GaussFiltVal = 0.5; %0.5 er bra med lim
 caxis([1, 2]);
 
 % Create output folder
-outDir = '\\sambaad.stud.ntnu.no\sverrsr\Documents\DNS_SCREENS_150k_dist3pi';
+outDir = 'D:\';
+inDir = 'D:\DNS_SCREENS_150k_dist3pi_fullSIM';
+vidName = 'DNS_SCREENS_150k_dist3pi.mp4';
+
+% outDir = '\\sambaad.stud.ntnu.no\sverrsr\Documents\DNS_SCREENS_150k_dist3pi';
+% inDir = '\\sambaad.stud.ntnu.no\sverrsr\Documents\DNS_SCREENS_150k_dist3pi';
+
 if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
@@ -26,12 +32,11 @@ end
 %v = VideoWriter(vidPath);
 
 % MP4 file:
-vidName = 'DNS_SCREENS_150k_dist3pi.mp4';
 vidPath = fullfile(outDir, vidName);
 v = VideoWriter(vidPath, 'MPEG-4');
 
-folder = '\\sambaad.stud.ntnu.no\sverrsr\Documents\DNS_SCREENS_150k_dist3pi';
-files = dir(fullfile(folder, 'screen_*.mat'));
+
+files = dir(fullfile(inDir, 'screen_*')); %.mat 
 files = {files.name};
 files = sort(files);
 
@@ -39,7 +44,8 @@ v.FrameRate = 20; % fps
 open(v);
 
 % --- Load first frame to initialize ---
-data = load(fullfile(folder, files{1}));
+data = load(fullfile(inDir, files{1}));
+
 if isfield(data, 'screen_image')
     img = data.screen_image;
 elseif isfield(data, 'screen')
@@ -56,13 +62,13 @@ figure;
 hImg = imagesc(img);
 axis image;
 set(gca, 'YDir', 'normal');
-colormap(flipud(sky)); %flipud(sky)
+colormap("gray"); %flipud(sky)
 colorbar;
 
 % Compute global limits across all frames
 minVal = inf; maxVal = -inf;
 for k = 1:numel(files)
-    data = load(fullfile(folder, files{k}));
+    data = load(fullfile(inDir, files{k}));
     if isfield(data, 'screen_image')
         img = data.screen_image;
     elseif isfield(data, 'screen')
@@ -83,7 +89,7 @@ caxis([0.5, 4]);
 %%
 % --- Main animation loop ---
 for k = 1:numel(files)
-    data = load(fullfile(folder, files{k}));
+    data = load(fullfile(inDir, files{k}));
 
     if isfield(data, 'screen_image')
         img = data.screen_image;

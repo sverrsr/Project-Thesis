@@ -1,7 +1,5 @@
-
-
 % -----------------------------------------------------------------------------
-% Creates an MP4 animation from .mat image files.
+% Creates an MP4 or AVI animation from .mat image files.
 % Loads each frame, applies Gaussian blur, updates the plot, 
 % and writes frames to a video file with fixed color scale and colormap.
 %
@@ -13,22 +11,32 @@
 %   caxis([0 0.05]) – color range for all frames
 % -----------------------------------------------------------------------------
 
+GaussFiltVal = 0.5; %0.5 er bra med lim
+caxis([1, 2]);
 
 % Create output folder
-outDir = 'videos';
+outDir = 'D:\DNS_SCREENS_150k_dist3pi_fullSIM';
+folder = 'D:\';
+vidName = 'DNS_SCREENS_150k_dist3pi.mp4';
+
+% outDir = '\\sambaad.stud.ntnu.no\sverrsr\Documents\DNS_SCREENS_150k_dist3pi';
+% folder = '\\sambaad.stud.ntnu.no\sverrsr\Documents\DNS_SCREENS_150k_dist3pi';
+
 if ~exist(outDir, 'dir')
     mkdir(outDir);
 end
 
-% AVI file: %vidName = 'blurred_animation.avi' %vidPath = fullfile(outDir, vidName); % Create video writer in new folder %v = VideoWriter(vidPath);
+% AVI file:
+%vidName = 'blurred_animation.avi'
+%vidPath = fullfile(outDir, vidName);
+%v = VideoWriter(vidPath);
 
 % MP4 file:
-vidName = 'blurred_animation.mp4';
 vidPath = fullfile(outDir, vidName);
 v = VideoWriter(vidPath, 'MPEG-4');
 
-folder = 'screens';
-files = dir(fullfile(folder, 'screen_*.mat'));
+
+files = dir(fullfile(folder, 'screen_*.'));
 files = {files.name};
 files = sort(files);
 
@@ -37,6 +45,7 @@ open(v);
 
 % --- Load first frame to initialize ---
 data = load(fullfile(folder, files{1}));
+
 if isfield(data, 'screen_image')
     img = data.screen_image;
 elseif isfield(data, 'screen')
@@ -45,20 +54,39 @@ else
     fns = fieldnames(data);
     img = data.(fns{1});
 end
-img = imgaussfilt(img, 4);
+
+img = imgaussfilt(img, GaussFiltVal);
 
 % --- Set up figure once ---
 figure;
 hImg = imagesc(img);
 axis image;
 set(gca, 'YDir', 'normal');
-colormap(flipud(sky));
+colormap(flipud(sky)); %flipud(sky)
 colorbar;
+
+% Compute global limits across all frames
+minVal = inf; maxVal = -inf;
+for k = 1:numel(files)
+    data = load(fullfile(folder, files{k}));
+    if isfield(data, 'screen_image')
+        img = data.screen_image;
+    elseif isfield(data, 'screen')
+        img = data.screen.image;
+    else
+        fns = fieldnames(data);
+        img = data.(fns{1});
+    end
+    minVal = min(minVal, min(img(:)));
+    maxVal = max(maxVal, max(img(:)));
+end
+fprintf('Global intensity range: [%.3e, %.3e]\n', minVal, maxVal);
 
 % adjust range to match your data
 % Must be adjusted to Gauss filtering. More gauss, lower axis
-caxis([0 0.05]);   
+caxis([0.5, 4]);
 
+%%
 % --- Main animation loop ---
 for k = 1:numel(files)
     data = load(fullfile(folder, files{k}));
@@ -72,8 +100,9 @@ for k = 1:numel(files)
         img = data.(fns{1});
     end
 
-    img = imgaussfilt(img, 2);
+    img = imgaussfilt(img, GaussFiltVal);
     set(hImg, 'CData', img);  % update only the image data
+    view(180,90)
     title(sprintf('Frame %d / %d', k, numel(files)));
     drawnow;
 
