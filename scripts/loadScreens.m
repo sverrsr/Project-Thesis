@@ -1,14 +1,19 @@
 % -----------------------------------------------------------------------------
 % Creates an MP4 or AVI animation from .mat image files.
+% The Images must be screen objects. See OPTOMETRIKA Toolbox
 % Loads each frame, applies Gaussian blur, updates the plot, 
 % and writes frames to a video file with fixed color scale and colormap.
 %
-% Variables to change:
+% Options:
 %   outDir       – output folder for the video
 %   vidName      – video file name
 %   v.FrameRate  – playback speed (fps)
 %   imgaussfilt(img, 2) – blur strength (higher = smoother)
 %   caxis([0 0.05]) – color range for all frames
+%
+% Output:
+%    figure
+%    mp4 or avi file 
 % -----------------------------------------------------------------------------
 
 GaussFiltVal = 0.5; %0.5 er bra med lim
