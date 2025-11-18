@@ -1,136 +1,125 @@
 close all
 
-%% Load image (old)
+%% Configuration
+% List the images you want to analyse. The script works with a single image or
+% a list of images (png/jpg/mat files). Each image is processed
+% independently.
+imageFiles = { ...
+    'smoothed_image2.png'  % Example input
+    % 'screen_1024bins_0002.mat'
+};
 
+% Set threshold percentiles between 0 (black) and 255 (white)
+warmPercentile = 97;  % warm: top 3%
+coldPercentile = 3;   % cold: bottom 3%
+areasToKeep    = 20;  % number of largest regions to keep
 
-Int1 = imread('smoothed_image1.png');
-Int2 = imread('smoothed_image2.png');
+%% Load all requested images as grayscale double matrices
+numImages = numel(imageFiles);
+loadedImages = cell(numImages, 1);
+labels = cell(numImages, 1);
+for i = 1:numImages
+    [loadedImages{i}, labels{i}] = loadSquareImage(imageFiles{i});
+end
 
-Int1 = imread('int1.jpg');
-Int2 = imread('int2.jpg');
+%% Analyse each image independently
+for imgIdx = 1:numImages
+    X = loadedImages{imgIdx};
+    label = labels{imgIdx};
 
-X1 = double(rgb2gray(Int1));
-X2 = double(rgb2gray(Int2));
+    vals = X(:);
+    vals = vals(~isnan(vals));
 
-%% Load image (new)
-% fileName1 = 'screen_1024bins_0002.mat';
-% fileName2 = 'screen_1024bins_0003.mat';   % different file if you compare
-% 
-% % Load screen objects
-% data1 = load(fileName1);
-% data2 = load(fileName2);
-% 
-% img1 = double(data1.screen.image);
-% img2 = double(data2.screen.image);
-% 
-% % NEW: Just assign img1 → X1, img2 → X2
-% X1 = img1;
-% X2 = img2;
+    thresh    = prctile(vals, warmPercentile);
+    invthresh = prctile(vals, coldPercentile);
 
-%%%%%%%%%%%% CONNECTED AREAS ANALYSIS %%%%%%%%%%%%%%
+    %% Warm areas
+    Xw = X > thresh;
+    CCw = bwconncomp(Xw);
+    areasWarm = cell2mat(struct2cell(regionprops(CCw, "Area")));
 
-%Set threshhold between 0 (black) and 255 (white)
-thresh = 1;
-invthresh = 1;
-areastokeep = 20;
+    [sortedWarm, orderWarm] = sort(areasWarm, 'descend');
+    bigWarmIdx = orderWarm(1:min(areasToKeep, numel(orderWarm)));
+    smallWarmIdx = setdiff(orderWarm, bigWarmIdx, 'stable');
 
-vals = X1(:);              % or [X1(:); X2(:)] if you want both images at once
-vals = vals(~isnan(vals));
+    XWarmLargest = cc2bw(CCw, ObjectsToKeep=bigWarmIdx);
+    XWarmSmall   = cc2bw(CCw, ObjectsToKeep=smallWarmIdx);
 
-thresh    = prctile(vals, 97);   % warm: top 3%
-invthresh = prctile(vals, 3);    % cold: bottom 3%
+    plotAreaSizes(sortedWarm, label, sprintf('Warm areas (>%d percentile)', warmPercentile));
 
-%Make binary images
-X1w = X1*0 + (X1>thresh);       %For light-area
-X2w = X2*0 + (X2>thresh);
+    warmFig = figure('Name', sprintf('Warm areas - %s', label));
+    warmFig.Position = [133 549 1200 700];
+    t = tiledlayout(warmFig, 2, 2, 'Padding','compact','TileSpacing','compact');
+    nexttile(t), plotSquareImage(X, sprintf('Original (%s)', label));
+    nexttile(t), plotSquareImage(Xw, sprintf('Mask > %0.2f', thresh));
+    nexttile(t), plotSquareImage(XWarmLargest, sprintf('Only %d largest warm areas', numel(bigWarmIdx)));
+    nexttile(t), plotSquareImage(XWarmSmall, sprintf('Without %d largest warm areas', numel(bigWarmIdx)));
 
-CC1w = bwconncomp(X1w);
-CC2w = bwconncomp(X2w);
+    %% Cold areas
+    Xb = X < invthresh;
+    CCb = bwconncomp(Xb);
+    areasCold = cell2mat(struct2cell(regionprops(CCb, "Area")));
 
-areas1w = cell2mat(struct2cell(regionprops(CC1w,"Area")));
-areas2w = cell2mat(struct2cell(regionprops(CC2w,"Area")));
+    [sortedCold, orderCold] = sort(areasCold, 'descend');
+    bigColdIdx = orderCold(1:min(areasToKeep, numel(orderCold)));
 
-%Lists of sizes of areas
-[Asz1,order1] = sort(areas1w,'descend');
-[Asz2,order2] = sort(areas2w,'descend');
-n1 = length(order1); n2 = length(order2);
+    XColdLargest = cc2bw(CCb, ObjectsToKeep=bigColdIdx);
 
+    plotAreaSizes(sortedCold, label, sprintf('Cold areas (<%d percentile)', coldPercentile));
 
-figure
-semilogy(1:length(Asz1),Asz1,1:length(Asz2),Asz2)
-legend('No waves', 'With waves');
-ylim([5 max([Asz1(1) Asz2(1)])])
-title('Area sizes, hot areas areas');
-ylabel('Area (pixels)');
-xlabel('Area index');
+    coldFig = figure('Name', sprintf('Cold areas - %s', label));
+    coldFig.Position = [183 349 1200 600];
+    t = tiledlayout(coldFig, 1, 3, 'Padding','compact','TileSpacing','compact');
+    nexttile(t), plotSquareImage(X, sprintf('Original (%s)', label));
+    nexttile(t), plotSquareImage(1 - Xb, sprintf('Mask < %0.2f', invthresh));
+    nexttile(t), plotSquareImage(1 - XColdLargest, sprintf('Only %d largest cold areas', numel(bigColdIdx)));
+end
 
+%% Helper functions
+function [img, label] = loadSquareImage(source)
+%LOADSQUAREIMAGE Load a file as a grayscale double image.
+%   Supports image formats recognised by IMREAD as well as MAT files that
+%   contain a struct named `screen` with a field `image`.
 
-%Separate out the largest areas
-bigidx1 = order1(1:areastokeep); 
-bigidx2 = order2(1:areastokeep);
-smallidx1 = order1(areastokeep+1:n1); 
-smallidx2 = order2(areastokeep+1:n2); 
+    label = source;
+    [~, ~, ext] = fileparts(source);
+    ext = lower(ext);
+    switch ext
+        case '.mat'
+            data = load(source);
+            if isfield(data, 'screen') && isfield(data.screen, 'image')
+                img = double(data.screen.image);
+                label = sprintf('%s (screen.image)', source);
+            else
+                error('MAT file %s must contain a struct named screen.image.', source);
+            end
+        otherwise
+            img = imread(source);
+            if ndims(img) == 3
+                img = rgb2gray(img);
+            end
+            img = double(img);
+    end
+end
 
-X1tBig = cc2bw(CC1w,ObjectsToKeep=bigidx1);
-X2tBig = cc2bw(CC2w,ObjectsToKeep=bigidx2);
-X1tSmall = cc2bw(CC1w,ObjectsToKeep=smallidx1);
-X2tSmall = cc2bw(CC2w,ObjectsToKeep=smallidx2);
+function plotSquareImage(img, titleText)
+%PLOTSQUAREIMAGE Display an image with square aspect ratio.
+    imagesc(img);
+    axis image off;
+    title(titleText, 'Interpreter','none');
+    colormap gray;
+end
 
-f=figure;
-set(f,"Position",[ 133         549        1594         730])
-colormap gray
- 
-t=tiledlayout(4,2,'Padding','compact','TileSpacing','compact');
-nexttile, imagesc(X1), axis image off,title('Original, no waves');
-nexttile, imagesc(X2), axis off, title('Original, with waves');
-nexttile, imagesc(X1w), axis off,title(sprintf('No waves. Threshold: %d',thresh));
-nexttile, imagesc(X2w), axis off, title(sprintf('With waves. Threshold: %d',thresh));
-nexttile, imagesc(X1tBig), axis off, title(sprintf('Threshold: %d, Only %d largest warm areas',thresh,areastokeep));
-nexttile, imagesc(X2tBig), axis off, title(sprintf('Threshold: %d, Only %d largest warm areas',thresh,areastokeep));
-nexttile, imagesc(X1tSmall), axis off, title(sprintf('Threshold: %d, Without %d largest warm areas',thresh,areastokeep));
-nexttile, imagesc(X2tSmall), axis off, title(sprintf('Threshold: %d, Without %d largest warm areas',thresh,areastokeep));
-
-
-
-%%%%%%%%%%%%%% SAME FOR DARK AREAS %%%%%%%%%%%%%% 
-X1b = X1*0 + (X1<invthresh);    %For dark-area analysis
-X2b = X2*0 + (X2<invthresh);
-
-CC1b = bwconncomp(X1b);
-CC2b = bwconncomp(X2b);
-
-areas1b = cell2mat(struct2cell(regionprops(CC1b,"Area")));
-areas2b = cell2mat(struct2cell(regionprops(CC2b,"Area")));
-
-%Lists of sizes of areas
-[Asz1,order1] = sort(areas1b,'descend');
-[Asz2,order2] = sort(areas2b,'descend');
-
-
-figure
-semilogy(1:length(Asz1),Asz1,1:length(Asz2),Asz2)
-legend('No waves', 'With waves');
-ylim([5 max([Asz1(1) Asz2(1)])])
-title('Area sizes, cold areas');
-ylabel('Area (pixels)');
-xlabel('Area index');
-
-
-%Just the largest areas
-bigidx1 = order1(1:areastokeep); 
-bigidx2 = order2(1:areastokeep);
-X1tBig = cc2bw(CC1b,ObjectsToKeep=bigidx1);
-X2tBig = cc2bw(CC2b,ObjectsToKeep=bigidx2);
-
-
-f=figure;
-set(f,"Position",[ 183         349        1594         620])
-colormap gray
- 
-t=tiledlayout(3,2,'Padding','compact','TileSpacing','compact');
-nexttile, imagesc(X1), axis off,title('Original, no waves');
-nexttile, imagesc(X2), axis off, title('Original, with waves');
-nexttile, imagesc(1-X1b), axis off,title(sprintf('No waves. Threshold: %d',invthresh));
-nexttile, imagesc(1-X2b), axis off, title(sprintf('With waves. Threshold: %d',invthresh));
-nexttile, imagesc(1-X1tBig), axis off, title(sprintf('Threshold: %d, Only %d largest cold areas',invthresh,areastokeep));
-nexttile, imagesc(1-X2tBig), axis off, title(sprintf('Threshold: %d, Only %d largest cold areas',invthresh,areastokeep));
+function plotAreaSizes(areaSizes, label, plotTitle)
+%PLOTAREASIZES Plot the distribution of area sizes on a semilog graph.
+    if isempty(areaSizes)
+        warning('No connected components found for %s (%s).', label, plotTitle);
+        return;
+    end
+    figure('Name', sprintf('Area sizes - %s', label));
+    semilogy(1:length(areaSizes), areaSizes, 'LineWidth', 1.5);
+    xlabel('Area index');
+    ylabel('Area (pixels)');
+    title(sprintf('%s - %s', plotTitle, label), 'Interpreter','none');
+    grid on;
+end
