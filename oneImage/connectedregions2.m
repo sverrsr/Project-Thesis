@@ -1,6 +1,6 @@
 clear all; clc; close all;
 
-fileName = 'screen_1024bins_0010.mat';   % <--- change to any file you want
+fileName = 'screen_1024bins_0001.mat';   % <--- change to any file you want
 
 % Create a new folder to save processed files
 outputFolder = fullfile('C:\Users\sverr\Documents\NTNU\Prosjekt\Project-Thesis', 'tenSampledSurfaces_smoothed_filtered');

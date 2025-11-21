@@ -10,11 +10,11 @@ clear all; clc; %close all;
 % load processed_surfElev_833.26.mat %08
 % load processed_surfElev_916.60.mat %09
 % load processed_surfElev_999.94.mat %10
-% load processed_surfElev_1000.00.mat %01
+ load processed_surfElev_1000.00.mat %01
 
 
  % Image to compare with
-img = double(imread('screen_1024bins_0010_largest_warm_areas.jpg'));
+img = double(imread('screen_1024bins_0001_largest_warm_areas.jpg'));
 
 Z = surfElev;
 clear surfElev;
@@ -48,7 +48,7 @@ g = 10;
 figure;
 imagesc(X(1,:), Y(:,1), Z);
 axis image;
-set(gca, 'YDir', 'normal');
+%set(gca, 'YDir', 'normal');
 colormap(turbo);
 colorbar;
 title('Surface elevation (2D height map)');
@@ -66,6 +66,8 @@ yticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
 % Curvature
 [K,H,Pmax,Pmin] = curvature(X,Y,Z); %[K, H, Pmax, Pmin] = surfature(X, Y, Z);
 
+% Find correlation of H and surface elevation
+R_H = corr(H(:), Z(:), 'rows', 'complete');
 
 unique(img(:))
 
@@ -75,6 +77,59 @@ figure;
 imagesc(BW_resized); axis image off; colormap gray;
 title('Resized image');
 
+%%
+figure;
+tiledlayout(1,2,'TileSpacing','compact','Padding','compact');
+
+nexttile;
+imagesc(Z); axis image; colormap turbo; colorbar;
+title('Z (høyde)');
+
+nexttile;
+imagesc(H); axis image; colormap turbo; colorbar;
+title('H (kurvatur)');
+
+%% Correlation between image and surface elevation
+M = BW_resized;      % mask after resize
+Z0 = Z(:);
+
+% no flip
+c_noflip = corr(M(:), Z0, 'rows','complete');
+
+% flip up-down
+M_ud = flipud(M);
+c_flipud = corr(M_ud(:), Z0, 'rows','complete');
+
+% flip left-right
+M_lr = fliplr(M);
+c_fliplr = corr(M_lr(:), Z0, 'rows','complete');
+
+% rotate 90
+M_r90 = rot90(M);
+c_rot90 = corr(M_r90(:), Z0, 'rows','complete');
+
+[c_noflip c_flipud c_fliplr c_rot90]
+
+%% Correlation between image and curvature
+M = BW_resized;      % mask after resize
+H0 = H(:);
+
+% no flip
+cH_noflip = corr(M(:), H0, 'rows','complete');
+
+% flip up-down
+M_ud = flipud(M);
+cH_flipud = corr(M_ud(:), H0, 'rows','complete');
+
+% flip left-right
+M_lr = fliplr(M);
+cH_fliplr = corr(M_lr(:), H0, 'rows','complete');
+
+% rotate 90
+M_r90 = rot90(M);
+cH_rot90 = corr(M_r90(:), H0, 'rows','complete');
+
+[cH_noflip cH_flipud cH_fliplr cH_rot90]
 
 %%
 mask = logical(BW_resized);          % 1 = scar, 0 = background
@@ -90,7 +145,7 @@ title('Mean curvature distribution');
 
 figure;
 boxplot([H_scar; H_bg], [ones(size(H_scar)); 2*ones(size(H_bg))])
-set(gca,'XTickLabel',{'scar','background'})
+%set(gca,'XTickLabel',{'scar','background'})
 ylabel('Mean curvature');
 
 mean_H_scar = mean(H_scar);
