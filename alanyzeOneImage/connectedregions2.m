@@ -1,6 +1,14 @@
-close all;
+clear all; clc; close all;
 
-fileName = 'screen_1024bins_0005.mat';   % <--- change to any file you want
+fileName = 'screen_1024bins_0001.mat';   % <--- change to any file you want
+
+% Create a new folder to save processed files
+outputFolder = fullfile('C:\Users\sverr\Documents\NTNU\Prosjekt\Project-Thesis', 'tenSampledSurfaces_smoothed_filtered');
+
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+    fprintf('Created folder: %s\n', outputFolder);
+end
 
 %% LOAD IMAGE
 data = load(fileName);
@@ -33,7 +41,12 @@ imagesc(imgContrast); axis image off; colormap gray;
 title('Contrast Enhanced Result');
 
 %% SAVE SMOOTHED IMAGE
-%imwrite(uint8(imgSmooth), 'smoothed_image2.jpg');
+%imwrite(uint8(imgSmooth), 'screen_1024bins_0002_smoothed.jpg');
+[~, baseName, ~] = fileparts(fileName);   % baseName = "screen_1024bins_0002"
+outFile = fullfile(outputFolder, baseName + "_smoothed.mat");
+
+% save(outFile, "imgSmooth");
+% fprintf('Saved: %s\n', outFile);
 
 %% STEP 2 — BANDPASS
 imgHigh = imgaussfilt(imgSmooth, params.sigmaHigh);
@@ -137,6 +150,13 @@ nexttile, imagesc(X1tSmall), axis image off, title(sprintf('Threshold: %d, Witho
 %nexttile, imagesc(X2tSmall), axis image off, title(sprintf('Threshold: %d, Without %d largest warm areas',thresh,areastokeep));
 
 
+% Save the binary image of the largest warm areas
+[~, baseName, ~] = fileparts(fileName);
+outImg = fullfile(outputFolder, baseName + "_largest_warm_areas.jpg");
+
+imwrite(X1tBig, outImg);
+fprintf('Saved: %s\n', outImg);
+
 
 %%%%%%%%%%%%%% SAME FOR DARK AREAS %%%%%%%%%%%%%% 
 X1b = X1*0 + (X1<invthresh);    %For dark-area analysis
@@ -175,7 +195,8 @@ xlabel('Area index');
 
 
 %Just the largest areas
-bigidx1 = order1(1:areastokeep); 
+n1 = length(order1);
+bigidx1 = order1(1:n1); 
 %bigidx2 = order2(1:areastokeep);
 X1tBig = cc2bw(CC1b,ObjectsToKeep=bigidx1);
 %X2tBig = cc2bw(CC2b,ObjectsToKeep=bigidx2);

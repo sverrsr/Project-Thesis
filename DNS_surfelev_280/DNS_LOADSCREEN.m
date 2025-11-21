@@ -1,9 +1,10 @@
 %%close all;
-clear all;  clc;
+clear all;  clc; close all;
 
 %% Plots only the surface at s = 1200
 
-load surfElev_280.00.mat;
+%load surfElev_280.00.mat;
+load processed_surfElev_583.30.mat
 
 Z = surfElev;
 clear surfElev;
@@ -25,7 +26,11 @@ overflatespenning = 0;
 g = 10;
 
 % Create a new mesh grid based on the specified dimensions
-[X, Y] = meshgrid(single(linspace(0, lx, nx)), single(linspace(0, ly, ny)));
+% Mesh from -pi to pi
+[X, Y] = meshgrid( ...
+    single(linspace(-pi, pi, nx)), ...
+    single(linspace(-pi, pi, ny)) ...
+);
 
 
 
@@ -145,11 +150,18 @@ n_a = n ./ norm(n);                        % re-unitize after interpolation
 
 % --- 2D height map ---
 figure;
-imagesc(X(1,:), Y(:,1), Z);      % plot using true X and Y
+imagesc(X(1,:), Y(:,1), Z);
 axis image;
-set(gca, 'YDir', 'normal');      % make Y increase upward
-colormap(turbo);                 % nice color gradient
+set(gca, 'YDir', 'normal');
+colormap(turbo);
 colorbar;
 title('Surface elevation (2D height map)');
 xlabel('X');
 ylabel('Y');
+
+% Nice pi ticks
+xticks([-pi -pi/2 0 pi/2 pi])
+xticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
+
+yticks([-pi -pi/2 0 pi/2 pi])
+yticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'})
