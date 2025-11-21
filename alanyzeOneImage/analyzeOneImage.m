@@ -1,7 +1,7 @@
-%% Single Screen Analysis (black & white)
+%% Single Screen Smoothing Analysis (black & white)
 % Works on ONE screen_*.mat file at a time.
 
-clear; clc;
+clear; clc; close all;
 
 %% ---------------- USER SETTINGS ----------------------------------------
 % Folder and file
